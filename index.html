@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DF ACADEMY · Calculadora de Tamaño de Posición</title>
+  <meta name="description" content="Calculadora de tamaño de posición para trading de Forex y XAUUSD por DF ACADEMY" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>body{background:#fafafa}</style>
+</head>
+<body>
+  <div class="min-h-screen w-full bg-neutral-50 text-neutral-900">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+      <header class="mb-6 flex flex-col gap-2">
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">DF ACADEMY · Calculadora de Tamaño de Posición</h1>
+        <p class="text-neutral-600">Calcula tamaño de posición, riesgo monetario y valor por pip. Soporta Forex y XAUUSD.</p>
+      </header>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <section class="bg-white rounded-2xl shadow p-5 border">
+          <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">⚙️ Parámetros</h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm mb-1">Par</label>
+              <select id="pair" class="w-full rounded-xl border px-3 py-2"></select>
+              <p id="pairInfo" class="text-xs text-neutral-500 mt-1"></p>
+            </div>
+
+            <div>
+              <label class="block text-sm mb-1">Divisa de la cuenta</label>
+              <select id="accountCurrency" class="w-full rounded-xl border px-3 py-2"></select>
+            </div>
+
+            <div>
+              <label class="block text-sm mb-1">Tamaño de la cuenta</label>
+              <input id="balance" class="w-full rounded-xl border px-3 py-2" inputmode="decimal" value="1000" />
+            </div>
+
+            <div>
+              <label class="block text-sm mb-1">Riesgo (%)</label>
+              <input id="riskPct" class="w-full rounded-xl border px-3 py-2" inputmode="decimal" value="1" />
+            </div>
+
+            <div>
+              <label class="block text-sm mb-1">Stop Loss (pips)</label>
+              <input id="stopPips" class="w-full rounded-xl border px-3 py-2" inputmode="decimal" value="20" />
+            </div>
+
+            <div>
+              <label class="block text-sm mb-1">Precio actual (referencia)</label>
+              <input id="price" class="w-full rounded-xl border px-3 py-2" inputmode="decimal" value="1.1000" />
+              <p class="text-xs text-neutral-500 mt-1">Informativo; el tamaño de pip es estándar por par.</p>
+            </div>
+
+            <div id="convWrap" class="sm:col-span-2 hidden">
+              <label class="block text-sm mb-1">Tipo de cambio <span id="quoteLabel"></span> → <span id="acctLabel"></span></label>
+              <input id="conv" class="w-full rounded-xl border px-3 py-2" inputmode="decimal" value="1" />
+              <p class="text-xs text-neutral-500 mt-1">Ej.: si tu cuenta está en USD y el par cotiza en JPY, usa JPY→USD (≈ 1 / USDJPY).</p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex items-center gap-3">
+            <button id="resetBtn" class="px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 inline-flex items-center gap-2">🔄 Reiniciar</button>
+          </div>
+
+          <div class="mt-6 bg-neutral-50 rounded-xl border p-4 flex items-start gap-2">
+            <div class="mt-0.5">ℹ️</div>
+            <p class="text-sm text-neutral-700">
+              Fórmula: <span class="font-semibold">Unidades = (Balance × Riesgo%) / (Stop(pips) × Valor de pip por unidad)</span>.
+              El valor de pip por unidad (en la divisa de la cuenta) es <span class="font-mono">pipSize × (tipo de cambio cotizada→cuenta)</span>.
+            </p>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl shadow p-5 border">
+          <h2 class="text-lg font-semibold mb-4">Resultados</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="rounded-2xl border p-4 bg-neutral-50">
+              <div class="text-xs text-neutral-500 mb-1">Riesgo monetario</div>
+              <div id="riskMoney" class="text-2xl font-semibold">-</div>
+            </div>
+            <div class="rounded-2xl border p-4 bg-neutral-50">
+              <div class="text-xs text-neutral-500 mb-1">Valor por pip</div>
+              <div id="pipValue" class="text-2xl font-semibold">-</div>
+            </div>
+            <div class="rounded-2xl border p-4 bg-neutral-50">
+              <div class="text-xs text-neutral-500 mb-1">Unidades (base)</div>
+              <div id="units" class="text-2xl font-semibold">-</div>
+            </div>
+            <div class="rounded-2xl border p-4 bg-neutral-50">
+              <div class="text-xs text-neutral-500 mb-1">Lotes (100k)</div>
+              <div id="lots" class="text-2xl font-semibold">-</div>
+            </div>
+            <div class="rounded-2xl border p-4 bg-neutral-50">
+              <div class="text-xs text-neutral-500 mb-1">Mini lotes (10k)</div>
+              <div id="minilots" class="text-2xl font-semibold">-</div>
+            </div>
+            <div class="rounded-2xl border p-4 bg-neutral-50">
+              <div class="text-xs text-neutral-500 mb-1">Micro lotes (1k)</div>
+              <div id="microlots" class="text-2xl font-semibold">-</div>
+            </div>
+          </div>
+
+          <div id="warning" class="mt-6 hidden bg-amber-50 text-amber-900 rounded-xl border border-amber-200 p-4 flex gap-2">
+            <div class="mt-0.5">⚠️</div>
+            <p class="text-sm">Completa los campos con valores válidos. El stop en pips y el tipo de cambio (cuando aplica) deben ser mayores a 0.</p>
+          </div>
+
+          <div class="mt-6">
+            <h3 class="font-semibold mb-2">Notas rápidas</h3>
+            <ul class="list-disc ml-5 text-sm text-neutral-700 space-y-1">
+              <li>Para JPY, el pip estándar es 0.01; para la mayoría de pares, 0.0001.</li>
+              <li>Si la divisa de la cuenta ≠ divisa cotizada, usa el tipo de cambio <span class="font-mono">cotizada→cuenta</span>.</li>
+              <li>1 lote = 100,000 unidades; 1 mini lote = 10,000; 1 micro lote = 1,000.</li>
+              <li>No incluye comisiones, spreads ni deslizamiento.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <footer class="mt-8 text-center text-xs text-neutral-500">
+        © <span id="year"></span> DF ACADEMY · Herramienta educativa.
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const PAIRS = [
+      { label: "EURUSD", base: "EUR", quote: "USD", pipSize: 0.0001 },
+      { label: "GBPUSD", base: "GBP", quote: "USD", pipSize: 0.0001 },
+      { label: "AUDUSD", base: "AUD", quote: "USD", pipSize: 0.0001 },
+      { label: "NZDUSD", base: "NZD", quote: "USD", pipSize: 0.0001 },
+      { label: "USDCHF", base: "USD", quote: "CHF", pipSize: 0.0001 },
+      { label: "USDCAD", base: "USD", quote: "CAD", pipSize: 0.0001 },
+      { label: "USDJPY", base: "USD", quote: "JPY", pipSize: 0.01 },
+      { label: "EURJPY", base: "EUR", quote: "JPY", pipSize: 0.01 },
+      { label: "GBPJPY", base: "GBP", quote: "JPY", pipSize: 0.01 },
+      { label: "XAUUSD (Oro)", base: "XAU", quote: "USD", pipSize: 0.1 }
+    ];
+    const CURRENCIES = ["USD","EUR","JPY","CHF","CAD","AUD","NZD"];
+
+    const $ = (id) => document.getElementById(id);
+    const toNumber = (v) => {
+      const n = Number(String(v).replace(/,/g, "."));
+      return isFinite(n) ? n : 0;
+    };
+    const fmt = (n, d=2) => isFinite(n) ? new Intl.NumberFormat(undefined,{maximumFractionDigits:d}).format(n) : "-";
+
+    function init() {
+      $("year").textContent = new Date().getFullYear();
+
+      // Fill selects
+      const pairSel = $("pair");
+      PAIRS.forEach((p,i)=>{
+        const opt = document.createElement("option");
+        opt.value = i; opt.textContent = p.label;
+        pairSel.appendChild(opt);
+      });
+      const acctSel = $("accountCurrency");
+      CURRENCIES.forEach(c=>{
+        const opt = document.createElement("option");
+        opt.value = c; opt.textContent = c;
+        acctSel.appendChild(opt);
+      });
+      acctSel.value = "USD";
+      updatePairInfo();
+      updateConvVisibility();
+
+      // Listeners
+      ["pair","accountCurrency","balance","riskPct","stopPips","price","conv"].forEach(id=>{
+        $(id)?.addEventListener("input", calculate);
+        $(id)?.addEventListener("change", ()=>{ if(id==="pair"||id==="accountCurrency"){ updatePairInfo(); updateConvVisibility(); } calculate(); });
+      });
+      $("resetBtn").addEventListener("click", ()=>{
+        $("pair").value = "0";
+        $("accountCurrency").value = "USD";
+        $("balance").value = "1000";
+        $("riskPct").value = "1";
+        $("stopPips").value = "20";
+        $("price").value = "1.1000";
+        $("conv").value = "1";
+        updatePairInfo();
+        updateConvVisibility();
+        calculate();
+      });
+
+      calculate();
+    }
+
+    function currentPair() { return PAIRS[Number($("pair").value || 0)] || PAIRS[0]; }
+
+    function updatePairInfo() {
+      const p = currentPair();
+      $("pairInfo").textContent = `Base: ${p.base} · Cotizada: ${p.quote} · Pip: ${p.pipSize}`;
+    }
+
+    function updateConvVisibility() {
+      const p = currentPair();
+      const acct = $("accountCurrency").value;
+      const needs = p.quote !== acct;
+      $("convWrap").classList.toggle("hidden", !needs);
+      $("quoteLabel").textContent = p.quote;
+      $("acctLabel").textContent = acct;
+    }
+
+    function calculate() {
+      const p = currentPair();
+      const acct = $("accountCurrency").value;
+      const balance = toNumber($("balance").value);
+      const riskPct = toNumber($("riskPct").value);
+      const stopPips = toNumber($("stopPips").value);
+      const conv = (p.quote === acct) ? 1 : toNumber($("conv").value);
+
+      const riskMoney = (balance * riskPct) / 100;
+      const pipValuePerUnit = p.pipSize * (conv || 0);
+      let requiredUnits = 0;
+      if (stopPips > 0 && pipValuePerUnit > 0) {
+        requiredUnits = riskMoney / (stopPips * pipValuePerUnit);
+      }
+
+      const lots = requiredUnits / 100000;
+      const mini = requiredUnits / 10000;
+      const micro = requiredUnits / 1000;
+      const moneyPerPip = pipValuePerUnit * requiredUnits;
+
+      $("riskMoney").textContent = fmt(riskMoney,2) + " " + acct;
+      $("pipValue").textContent = fmt(moneyPerPip,4) + " " + acct;
+      $("units").textContent = fmt(requiredUnits,2);
+      $("lots").textContent = fmt(lots,3);
+      $("minilots").textContent = fmt(mini,3);
+      $("microlots").textContent = fmt(micro,3);
+
+      const invalid = !(stopPips > 0 && pipValuePerUnit > 0);
+      $("warning").classList.toggle("hidden", !invalid);
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
