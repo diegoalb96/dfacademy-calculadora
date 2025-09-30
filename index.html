@@ -43,6 +43,30 @@
     </div>
     <div style="background:#F7BE0C;"><div class="max-w-6xl mx-auto px-4 h-1"></div></div>
   </header>
+  <!-- Ticker Tape de TradingView: FRANJA DE PRECIOS EN VIVO -->
+<div class="hidden sm:block" style="background:#040D51; border-bottom:1px solid #0b1355;">
+  <div class="tradingview-widget-container" style="max-width:100%; margin:0 auto;">
+    <div class="tradingview-widget-container__widget"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+    {
+      "symbols": [
+        { "proName": "FX:EURUSD",  "title": "EUR/USD" },
+        { "proName": "OANDA:XAUUSD", "title": "XAU/USD" },
+        { "proName": "FX:GBPUSD",  "title": "GBP/USD" },
+        { "proName": "FX:USDJPY",  "title": "USD/JPY" },
+        { "proName": "CAPITALCOM:US500", "title": "S&P 500" },
+        { "proName": "BINANCE:BTCUSDT", "title": "BTC/USDT" }
+      ],
+      "showSymbolLogo": true,
+      "isTransparent": true,
+      "displayMode": "adaptive",
+      "colorTheme": "dark",
+      "locale": "es"
+    }
+    </script>
+  </div>
+</div>
+
 
   <main id="calc" class="min-h-screen w-full text-neutral-900">
     <div class="max-w-6xl mx-auto px-4 py-8">
