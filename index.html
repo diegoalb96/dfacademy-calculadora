@@ -12,12 +12,10 @@
     tailwind = { config: { theme: { extend: { colors: { brand: '#040D51', accent: '#F7BE0C' } } } } };
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body{background:#fafafa}
-  </style>
+  <style>body{background:#fafafa}</style>
 </head>
 <body>
-  <!-- Elegant top nav -->
+  <!-- Header fijo con compartir en Telegram -->
   <header class="sticky top-0 z-40 shadow-sm" style="background:#040D51;">
     <div class="max-w-6xl mx-auto px-4">
       <div class="flex items-center justify-between h-14">
@@ -28,14 +26,15 @@
         <nav class="flex items-center gap-4 text-sm">
           <a href="#" class="text-white/80 hover:text-white transition">Herramientas de Trading</a>
           <a href="#calc" class="text-white/80 hover:text-white transition">Calculadora</a>
-          <a href="#faq" class="text-white/80 hover:text-white transition hidden sm:inline">FAQ</a>
         </nav>
-        <a href="#share" class="hidden sm:inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg" style="background:#F7BE0C; color:#040D51">Compartir</a>
+        <button id="shareBtn"
+          class="hidden sm:inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg"
+          style="background:#F7BE0C; color:#040D51">
+          Compartir
+        </button>
       </div>
     </div>
-    <div style="background:#F7BE0C;">
-      <div class="max-w-6xl mx-auto px-4 h-1"></div>
-    </div>
+    <div style="background:#F7BE0C;"><div class="max-w-6xl mx-auto px-4 h-1"></div></div>
   </header>
 
   <main id="calc" class="min-h-screen w-full text-neutral-900">
@@ -140,16 +139,6 @@
             <div class="mt-0.5">⚠️</div>
             <p class="text-sm">Completa los campos con valores válidos. El stop en pips y el tipo de cambio (cuando aplica) deben ser mayores a 0.</p>
           </div>
-
-          <div class="mt-6" id="faq">
-            <h3 class="font-semibold mb-2">Notas rápidas</h3>
-            <ul class="list-disc ml-5 text-sm text-neutral-700 space-y-1">
-              <li>Para JPY, el pip estándar es 0.01; para la mayoría de pares, 0.0001.</li>
-              <li>Si la divisa de la cuenta ≠ divisa cotizada, usa el tipo de cambio <span class="font-mono">cotizada→cuenta</span>.</li>
-              <li>1 lote = 100,000 unidades; 1 mini lote = 10,000; 1 micro lote = 1,000.</li>
-              <li>No incluye comisiones, spreads ni deslizamiento.</li>
-            </ul>
-          </div>
         </section>
       </div>
 
@@ -160,6 +149,20 @@
   </main>
 
   <script>
+    // Botón Compartir → Telegram
+    document.addEventListener('DOMContentLoaded', () => {
+      const shareBtn = document.getElementById('shareBtn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+          const url = window.location.href;
+          const text = "🎯 Calculadora de Tamaño de Posición – DF ACADEMY\nÚsala gratis para calcular lotes, riesgo y valor por pip en Forex y XAUUSD:";
+          const tg = "https://t.me/share/url?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(text + "\n" + url);
+          window.open(tg, "_blank", "noopener");
+        });
+      }
+    });
+
+    // ===== Lógica de la calculadora (vanilla JS) =====
     const PAIRS = [
       { label: "EURUSD", base: "EUR", quote: "USD", pipSize: 0.0001 },
       { label: "GBPUSD", base: "GBP", quote: "USD", pipSize: 0.0001 },
@@ -186,14 +189,64 @@
       CURRENCIES.forEach(c=>{ const opt = document.createElement("option"); opt.value = c; opt.textContent = c; acctSel.appendChild(opt); });
       acctSel.value = "USD";
       updatePairInfo(); updateConvVisibility();
-      ["pair","accountCurrency","balance","riskPct","stopPips","price","conv"].forEach(id=>{ $(id)?.addEventListener("input", calculate); $(id)?.addEventListener("change", ()=>{ if(id==="pair"||id==="accountCurrency"){ updatePairInfo(); updateConvVisibility(); } calculate(); }); });
-      $("resetBtn").addEventListener("click", ()=>{ $("pair").value="0"; $("accountCurrency").value="USD"; $("balance").value="1000"; $("riskPct").value="1"; $("stopPips").value="20"; $("price").value="1.1000"; $("conv").value="1"; updatePairInfo(); updateConvVisibility(); calculate(); });
+      ["pair","accountCurrency","balance","riskPct","stopPips","price","conv"].forEach(id=>{
+        $(id)?.addEventListener("input", calculate);
+        $(id)?.addEventListener("change", ()=>{
+          if(id==="pair"||id==="accountCurrency"){ updatePairInfo(); updateConvVisibility(); }
+          calculate();
+        });
+      });
+      $("resetBtn").addEventListener("click", ()=>{
+        $("pair").value="0"; $("accountCurrency").value="USD";
+        $("balance").value="1000"; $("riskPct").value="1"; $("stopPips").value="20";
+        $("price").value="1.1000"; $("conv").value="1";
+        updatePairInfo(); updateConvVisibility(); calculate();
+      });
       calculate();
     }
     function currentPair() { return PAIRS[Number($("pair").value||0)] || PAIRS[0]; }
-    function updatePairInfo() { const p = currentPair(); $("pairInfo").textContent = `Base: ${p.base} · Cotizada: ${p.quote} · Pip: ${p.pipSize}`; }
-    function updateConvVisibility() { const p = currentPair(); const acct = $("accountCurrency").value; const needs = p.quote !== acct; $("convWrap").classList.toggle("hidden", !needs); $("quoteLabel").textContent = p.quote; $("acctLabel").textContent = acct; }
-    function calculate() { const p=currentPair(); const acct=$("accountCurrency").value; const balance=toNumber($("balance").value); const riskPct=toNumber($("riskPct").value); const stopPips=toNumber($("stopPips").value); const conv=(p.quote===acct)?1:toNumber($("conv").value); const riskMoney=(balance*riskPct)/100; const pipValuePerUnit=p.pipSize*(conv||0); let requiredUnits=0; if(stopPips>0&&pipValuePerUnit>0) requiredUnits=riskMoney/(stopPips*pipValuePerUnit); const lots=requiredUnits/100000; const mini=requiredUnits/10000; const micro=requiredUnits/1000; const moneyPerPip=pipValuePerUnit*requiredUnits; $("riskMoney").textContent = fmt(riskMoney,2) + " " + acct; $("pipValue").textContent = fmt(moneyPerPip,4) + " " + acct; $("units").textContent=fmt(requiredUnits,2); $("lots").textContent=fmt(lots,3); $("minilots").textContent=fmt(mini,3); $("microlots").textContent=fmt(micro,3); const invalid = !(stopPips>0 && pipValuePerUnit>0); $("warning").classList.toggle("hidden", !invalid); }
+    function updatePairInfo() {
+      const p = currentPair();
+      $("pairInfo").textContent = `Base: ${p.base} · Cotizada: ${p.quote} · Pip: ${p.pipSize}`;
+    }
+    function updateConvVisibility() {
+      const p = currentPair();
+      const acct = $("accountCurrency").value;
+      const needs = p.quote !== acct;
+      $("convWrap").classList.toggle("hidden", !needs);
+      $("quoteLabel").textContent = p.quote;
+      $("acctLabel").textContent = acct;
+    }
+    function calculate() {
+      const p = currentPair();
+      const acct = $("accountCurrency").value;
+      const balance = toNumber($("balance").value);
+      const riskPct = toNumber($("riskPct").value);
+      const stopPips = toNumber($("stopPips").value);
+      const conv = (p.quote === acct) ? 1 : toNumber($("conv").value);
+
+      const riskMoney = (balance * riskPct) / 100;
+      const pipValuePerUnit = p.pipSize * (conv || 0);
+      let requiredUnits = 0;
+      if (stopPips > 0 && pipValuePerUnit > 0) {
+        requiredUnits = riskMoney / (stopPips * pipValuePerUnit);
+      }
+
+      const lots = requiredUnits / 100000;
+      const mini = requiredUnits / 10000;
+      const micro = requiredUnits / 1000;
+      const moneyPerPip = pipValuePerUnit * requiredUnits;
+
+      $("riskMoney").textContent = fmt(riskMoney,2) + " " + acct;
+      $("pipValue").textContent = fmt(moneyPerPip,4) + " " + acct;
+      $("units").textContent = fmt(requiredUnits,2);
+      $("lots").textContent = fmt(lots,3);
+      $("minilots").textContent = fmt(mini,3);
+      $("microlots").textContent = fmt(micro,3);
+
+      const invalid = !(stopPips > 0 && pipValuePerUnit > 0);
+      $("warning").classList.toggle("hidden", !invalid);
+    }
     document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
