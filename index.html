@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DF ACADEMY · Calculadora de Tamaño de Posición</title>
+  <meta name="description" content="Calculadora de tamaño de posición para trading de Forex, Metales, Índices, Criptomonedas y Commodities por DF ACADEMY." />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#040D51" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DF Calc" />
+  <link rel="icon" type="image/png" href="assets/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <script>
+    tailwind = { config: { theme: { extend: {
+      colors: { brand: '#040D51', accent: '#F7BE0C', brandLight: '#0b1355' },
+      fontFamily: { sans: ['DM Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
+    }}}}
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); font-family: 'DM Sans', sans-serif; }
+    .result-card { transition: all 0.2s ease; }
+    .result-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(4, 13, 81, 0.1); }
+    select, input { font-family: 'DM Sans', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .category-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .cat-forex { background: #dbeafe; color: #1e40af; }
+    .cat-metals { background: #fef3c7; color: #92400e; }
+    .cat-energy { background: #fee2e2; color: #991b1b; }
+    .cat-indices { background: #d1fae5; color: #065f46; }
+    .cat-crypto { background: #ede9fe; color: #5b21b6; }
+    optgroup { font-weight: 700; color: #040D51; background: #f8fafc; }
+    option { font-weight: 400; color: #1f2937; padding: 8px; }
+    .gradient-border { background: linear-gradient(135deg, #040D51, #F7BE0C); padding: 1px; border-radius: 12px; }
+    .gradient-border > div { background: white; border-radius: 11px; }
+    .accuracy-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+    .accuracy-high { background: #d1fae5; color: #065f46; }
+    .accuracy-low { background: #fee2e2; color: #991b1b; }
+    .info-box { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; }
+    .warning-box { background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%); border: 1px solid #fde047; }
+    .collapsible-header { cursor: pointer; user-select: none; }
+    .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+    .collapsible-content.open { max-height: 3000px; }
+    .tab-btn { transition: all 0.2s; }
+    .tab-btn.active { background: #040D51; color: white; }
+  </style>
+</head>
+<body class="text-neutral-900 min-h-screen">
+  <header class="sticky top-0 z-[40] shadow-lg" style="background: linear-gradient(90deg, #040D51 0%, #0b1355 100%);">
+    <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="assets/logo.png" alt="DF Academy" class="h-8 w-auto" onerror="this.style.display='none'" />
+        <span class="text-white/90 text-sm font-medium">Herramientas de Trading</span>
+      </div>
+      <span class="hidden sm:inline-block text-xs text-white/60 bg-white/10 px-2 py-1 rounded">v2.1</span>
+    </div>
+  </header>
+
+  <div id="tv-tape" style="background:#040D51; border-bottom:1px solid #0b1355;">
+    <div class="tradingview-widget-container" style="max-width:100%; margin:0 auto;">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+      {"symbols":[{"proName":"FX:EURUSD","title":"EUR/USD"},{"proName":"OANDA:XAUUSD","title":"XAU/USD"},{"proName":"FX:GBPUSD","title":"GBP/USD"},{"proName":"FX:USDJPY","title":"USD/JPY"},{"proName":"CAPITALCOM:US500","title":"S&P 500"},{"proName":"BINANCE:BTCUSDT","title":"BTC/USDT"}],"showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive","colorTheme":"dark","locale":"es"}
+      </script>
+    </div>
+  </div>
+
+  <main class="min-h-screen w-full">
+    <section class="max-w-6xl mx-auto px-4 py-8">
+      <div class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">
+          <span style="color: #040D51;">DF ACADEMY</span> <span class="text-neutral-400">·</span> Calculadora de Posición
+        </h1>
+        <p class="mt-3 text-neutral-600 max-w-2xl mx-auto">Calcula el tamaño óptimo de tu posición basado en tu gestión de riesgo.</p>
+        <div class="flex flex-wrap justify-center gap-2 mt-4">
+          <span class="category-badge cat-forex">Forex</span>
+          <span class="category-badge cat-metals">Metales</span>
+          <span class="category-badge cat-energy">Energía</span>
+          <span class="category-badge cat-indices">Índices</span>
+          <span class="category-badge cat-crypto">Cripto</span>
+        </div>
+      </div>
+
+      <div class="warning-box rounded-xl p-4 mb-6">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <h3 class="font-bold text-amber-800">Importante: Precisión por Tipo de Activo</h3>
+            <p class="text-sm text-amber-700 mt-1">
+              <span class="accuracy-badge accuracy-high">✓ FOREX</span> es universal (1 lote = 100k unidades en todos los brokers).
+              <span class="accuracy-badge accuracy-low ml-2">⚠️ Otros activos</span> (Metales, Índices, Cripto, Energías) <b>varían por broker</b>. Configura las especificaciones abajo.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <div class="space-y-6">
+          <div class="gradient-border">
+            <div class="bg-white shadow-sm rounded-xl p-6">
+              <div class="flex items-center gap-2 mb-5">
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white font-bold text-lg">⚙️</span>
+                <div>
+                  <h2 class="text-lg font-bold text-brand">Parámetros de la Operación</h2>
+                  <p class="text-xs text-neutral-500">Configura tu trade</p>
+                </div>
+              </div>
+
+              <label class="block text-sm font-semibold text-neutral-700">Instrumento</label>
+              <select id="symbol" class="mt-1 w-full rounded-lg border-2 border-neutral-200 px-3 py-2.5 focus:border-brand focus:outline-none">
+                <optgroup label="📈 FOREX - Mayores (✓ Universal)">
+                  <option value="EURUSD">EUR/USD</option><option value="GBPUSD">GBP/USD</option><option value="USDJPY">USD/JPY</option>
+                  <option value="USDCHF">USD/CHF</option><option value="AUDUSD">AUD/USD</option><option value="USDCAD">USD/CAD</option><option value="NZDUSD">NZD/USD</option>
+                </optgroup>
+                <optgroup label="📊 FOREX - Cruces (✓ Universal)">
+                  <option value="EURGBP">EUR/GBP</option><option value="EURJPY">EUR/JPY</option><option value="EURCHF">EUR/CHF</option>
+                  <option value="EURAUD">EUR/AUD</option><option value="EURCAD">EUR/CAD</option><option value="EURNZD">EUR/NZD</option>
+                  <option value="GBPJPY">GBP/JPY</option><option value="GBPCHF">GBP/CHF</option><option value="GBPAUD">GBP/AUD</option>
+                  <option value="GBPCAD">GBP/CAD</option><option value="GBPNZD">GBP/NZD</option><option value="AUDJPY">AUD/JPY</option>
+                  <option value="AUDCHF">AUD/CHF</option><option value="AUDCAD">AUD/CAD</option><option value="AUDNZD">AUD/NZD</option>
+                  <option value="CADJPY">CAD/JPY</option><option value="CADCHF">CAD/CHF</option><option value="CHFJPY">CHF/JPY</option>
+                  <option value="NZDJPY">NZD/JPY</option><option value="NZDCHF">NZD/CHF</option><option value="NZDCAD">NZD/CAD</option>
+                </optgroup>
+                <optgroup label="🌍 FOREX - Exóticos (✓ Universal)">
+                  <option value="USDMXN">USD/MXN</option><option value="USDZAR">USD/ZAR</option><option value="USDTRY">USD/TRY</option>
+                  <option value="USDSEK">USD/SEK</option><option value="USDNOK">USD/NOK</option><option value="USDDKK">USD/DKK</option>
+                  <option value="USDSGD">USD/SGD</option><option value="USDHKD">USD/HKD</option><option value="USDPLN">USD/PLN</option>
+                  <option value="USDHUF">USD/HUF</option><option value="USDCZK">USD/CZK</option><option value="USDCNH">USD/CNH</option>
+                  <option value="EURTRY">EUR/TRY</option><option value="EURMXN">EUR/MXN</option><option value="EURZAR">EUR/ZAR</option>
+                  <option value="EURSEK">EUR/SEK</option><option value="EURNOK">EUR/NOK</option><option value="EURPLN">EUR/PLN</option>
+                  <option value="GBPZAR">GBP/ZAR</option><option value="GBPTRY">GBP/TRY</option>
+                </optgroup>
+                <optgroup label="🥇 METALES (⚠️ Verificar Broker)">
+                  <option value="XAUUSD">XAU/USD (Oro)</option><option value="XAGUSD">XAG/USD (Plata)</option>
+                  <option value="XPTUSD">XPT/USD (Platino)</option><option value="XPDUSD">XPD/USD (Paladio)</option>
+                </optgroup>
+                <optgroup label="⛽ ENERGÍAS (⚠️ Verificar Broker)">
+                  <option value="USOIL">USOIL / WTI</option><option value="UKOIL">UKOIL / Brent</option><option value="NGAS">Gas Natural</option>
+                </optgroup>
+                <optgroup label="📉 ÍNDICES (⚠️ Verificar Broker)">
+                  <option value="US30">US30 / Dow Jones</option><option value="US500">US500 / S&P 500</option>
+                  <option value="US100">US100 / NASDAQ</option><option value="GER40">GER40 / DAX</option>
+                  <option value="UK100">UK100 / FTSE</option><option value="JPN225">JPN225 / Nikkei</option>
+                  <option value="FRA40">FRA40 / CAC 40</option><option value="ESP35">ESP35 / IBEX 35</option>
+                </optgroup>
+                <optgroup label="₿ CRIPTOMONEDAS (⚠️ Verificar Broker)">
+                  <option value="BTCUSD">BTC/USD</option><option value="ETHUSD">ETH/USD</option>
+                  <option value="LTCUSD">LTC/USD</option><option value="XRPUSD">XRP/USD</option>
+                  <option value="SOLUSD">SOL/USD</option><option value="ADAUSD">ADA/USD</option>
+                  <option value="DOGEUSD">DOGE/USD</option><option value="LINKUSD">LINK/USD</option>
+                </optgroup>
+              </select>
+              
+              <div id="accuracyIndicator" class="mt-2 flex items-center gap-2">
+                <span id="accuracyBadge" class="accuracy-badge accuracy-high">✓ Precisión Universal</span>
+                <span id="accuracyText" class="text-xs text-neutral-500"></span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 mt-5">
+                <div>
+                  <label class="block text-sm font-semibold text-neutral-700">Divisa de la cuenta</label>
+                  <select id="accountCcy" class="mt-1 w-full rounded-lg border-2 border-neutral-200 px-3 py-2.5 focus:border-brand focus:outline-none">
+                    <option>USD</option><option>EUR</option><option>GBP</option><option>JPY</option><option>CHF</option><option>AUD</option><option>CAD</option><option>NZD</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-neutral-700">Balance de la cuenta</label>
+                  <input id="balance" type="number" step="0.01" value="10000" class="mt-1 w-full rounded-lg border-2 border-neutral-200 px-3 py-2.5 focus:border-brand focus:outline-none" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label class="block text-sm font-semibold text-neutral-700">Riesgo (%)</label>
+                  <input id="riskPct" type="number" step="0.01" value="1" class="mt-1 w-full rounded-lg border-2 border-neutral-200 px-3 py-2.5 focus:border-brand focus:outline-none" />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-neutral-700">Stop Loss (pips/puntos)</label>
+                  <input id="stopPips" type="number" step="0.1" value="20" class="mt-1 w-full rounded-lg border-2 border-neutral-200 px-3 py-2.5 focus:border-brand focus:outline-none" />
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <label class="block text-sm font-semibold text-neutral-700">Tipo de Cambio (cotizada → cuenta)</label>
+                <input id="conv" type="number" step="0.0001" value="1.0000" class="mt-1 w-full rounded-lg border-2 border-neutral-200 px-3 py-2.5 focus:border-brand focus:outline-none mono text-sm" />
+                <p class="text-[11px] text-neutral-500 mt-1">Si tu cuenta es USD y el par termina en USD, déjalo en 1.0000</p>
+              </div>
+
+              <div class="flex items-center gap-3 mt-6">
+                <button id="btnCalc" class="flex-1 px-5 py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90 active:scale-[0.98]" style="background: linear-gradient(135deg, #040D51, #0b1355);">📊 Calcular</button>
+                <button id="btnReset" class="px-5 py-3 rounded-lg border-2 border-neutral-300 font-semibold text-neutral-600 hover:bg-neutral-50">↺ Reset</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white shadow-sm border rounded-xl overflow-hidden">
+            <div id="brokerToggle" class="collapsible-header p-4 flex items-center justify-between hover:bg-neutral-50">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">🔧</span>
+                <div>
+                  <h3 class="font-bold text-brand">Especificaciones del Broker</h3>
+                  <p class="text-xs text-neutral-500">Solo para activos NO-Forex (Metales, Índices, Cripto, etc.)</p>
+                </div>
+              </div>
+              <span id="brokerArrow" class="text-neutral-400 transition-transform">▼</span>
+            </div>
+            
+            <div id="brokerContent" class="collapsible-content">
+              <div class="px-4 pb-4 border-t">
+                <div class="info-box rounded-lg p-3 mt-4 text-sm">
+                  <p class="font-semibold text-blue-800">ℹ️ ¿Por qué es importante?</p>
+                  <p class="text-blue-700 mt-1">Los brokers usan diferentes tamaños de contrato. Por ejemplo, 1 lote de Oro puede ser 100 onzas en un broker y 1 onza en otro. <b>Para Forex no necesitas cambiar nada</b>.</p>
+                </div>
+
+                <div class="mt-4 space-y-4">
+                  <div>
+                    <label class="block text-sm font-semibold text-neutral-700">Tamaño de Contrato (1 lote = ? unidades)</label>
+                    <input id="brokerLotSize" type="number" step="0.01" value="100" class="mt-1 w-full rounded-lg border-2 border-amber-200 bg-amber-50/50 px-3 py-2.5 focus:border-amber-400 focus:outline-none mono" />
+                    <p class="text-[11px] text-neutral-500 mt-1">Ej: Oro típico = 100 onzas, algunos brokers = 1</p>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-semibold text-neutral-700">Valor del Tick/Pip (USD por tick, por 1 lote)</label>
+                    <input id="brokerTickValue" type="number" step="0.01" value="1" class="mt-1 w-full rounded-lg border-2 border-amber-200 bg-amber-50/50 px-3 py-2.5 focus:border-amber-400 focus:outline-none mono" />
+                    <p class="text-[11px] text-neutral-500 mt-1">Ej: Oro 100oz con tick 0.01 = $1 por tick por lote</p>
+                  </div>
+                </div>
+
+                <button id="btnApplyBroker" class="mt-4 w-full px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600">✓ Aplicar Especificaciones</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-white shadow-sm border rounded-xl p-6">
+            <div class="flex items-center gap-2 mb-5">
+              <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-brand font-bold text-lg">📊</span>
+              <div>
+                <h2 class="text-lg font-bold text-brand">Resultados</h2>
+                <p class="text-xs text-neutral-500">Tu tamaño de posición óptimo</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="result-card rounded-xl border-2 border-red-100 bg-red-50/50 p-4">
+                <p class="text-sm text-red-600 font-medium">💰 Riesgo Monetario</p>
+                <p id="riskMoneyOut" class="text-2xl font-bold mt-1 mono text-red-700">—</p>
+              </div>
+              <div class="result-card rounded-xl border-2 border-blue-100 bg-blue-50/50 p-4">
+                <p class="text-sm text-blue-600 font-medium">📏 Valor por Pip</p>
+                <p id="pipValueOut" class="text-xl font-bold mt-1 mono text-blue-700">—</p>
+              </div>
+              <div class="result-card rounded-xl border-2 border-brand/20 bg-brand/5 p-4">
+                <p class="text-sm text-brand font-medium">📦 <span id="unitLabel">Unidades</span></p>
+                <p id="unitsOut" class="text-2xl font-bold mt-1 mono text-brand">—</p>
+              </div>
+              <div class="result-card rounded-xl border-2 border-accent/40 bg-accent/10 p-4">
+                <p class="text-sm text-amber-700 font-medium">🎯 Lotes</p>
+                <p id="lotsOut" class="text-2xl font-bold mt-1 mono text-amber-700">—</p>
+                <p id="lotsLabel" class="text-xs text-amber-600 mt-1"></p>
+              </div>
+              <div class="result-card rounded-xl border-2 border-green-100 bg-green-50/50 p-4">
+                <p class="text-sm text-green-600 font-medium">Mini Lotes (0.1)</p>
+                <p id="miniOut" class="text-xl font-bold mt-1 mono text-green-700">—</p>
+              </div>
+              <div class="result-card rounded-xl border-2 border-purple-100 bg-purple-50/50 p-4">
+                <p class="text-sm text-purple-600 font-medium">Micro Lotes (0.01)</p>
+                <p id="microOut" class="text-xl font-bold mt-1 mono text-purple-700">—</p>
+              </div>
+            </div>
+            <div id="instrumentInfo" class="mt-4 p-3 rounded-lg bg-neutral-100 text-sm text-neutral-700"></div>
+          </div>
+
+          <div class="bg-white shadow-sm border rounded-xl p-6">
+            <h3 class="font-bold text-brand mb-3">📝 Notas del Cálculo</h3>
+            <ul id="calcNotes" class="text-sm text-neutral-600 space-y-2"><li>Selecciona un instrumento para ver información.</li></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- GUÍA -->
+      <div class="mt-8 bg-white rounded-xl shadow-sm border overflow-hidden">
+        <div id="guideToggle" class="collapsible-header p-5 flex items-center justify-between hover:bg-neutral-50">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📖</span>
+            <div>
+              <h3 class="text-lg font-bold text-brand">Guía: Cómo Verificar las Especificaciones de tu Broker</h3>
+              <p class="text-sm text-neutral-500">Aprende a encontrar el tamaño de contrato exacto en MT4/MT5</p>
+            </div>
+          </div>
+          <span id="guideArrow" class="text-neutral-400 transition-transform text-xl">▼</span>
+        </div>
+        
+        <div id="guideContent" class="collapsible-content">
+          <div class="px-5 pb-5 border-t">
+            <div class="flex gap-2 mt-4 mb-4">
+              <button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium" data-tab="mt4">MetaTrader 4/5</button>
+              <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-neutral-100" data-tab="ctrader">cTrader</button>
+            </div>
+
+            <div id="tab-mt4" class="tab-content space-y-4">
+              <div class="flex gap-4 items-start p-4 bg-blue-50 rounded-lg">
+                <span class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">1</span>
+                <div>
+                  <p class="font-semibold">Abre "Observación del Mercado"</p>
+                  <p class="text-sm text-neutral-600"><code class="bg-white px-1 rounded">Ver → Observación del Mercado</code> o <code class="bg-white px-1 rounded">Ctrl + M</code></p>
+                </div>
+              </div>
+              <div class="flex gap-4 items-start p-4 bg-blue-50 rounded-lg">
+                <span class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">2</span>
+                <div>
+                  <p class="font-semibold">Click derecho en el símbolo → "Especificación"</p>
+                  <p class="text-sm text-neutral-600">Se abrirá una ventana con todos los detalles del contrato</p>
+                </div>
+              </div>
+              <div class="flex gap-4 items-start p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                <span class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold">3</span>
+                <div>
+                  <p class="font-semibold text-green-800">Busca estos valores:</p>
+                  <ul class="text-sm text-green-700 mt-2 space-y-1">
+                    <li><b>Tamaño del contrato (Contract size):</b> → Ingresa en "Tamaño de Contrato"</li>
+                    <li><b>Valor del tick (Tick value):</b> → Ingresa en "Valor del Tick/Pip"</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div id="tab-ctrader" class="tab-content hidden space-y-4">
+              <div class="flex gap-4 items-start p-4 bg-orange-50 rounded-lg">
+                <span class="flex-shrink-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">1</span>
+                <div><p class="font-semibold">Click en el símbolo → ícono de información (i)</p></div>
+              </div>
+              <div class="flex gap-4 items-start p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                <span class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold">2</span>
+                <div>
+                  <p class="font-semibold text-green-800">Busca: Lot Size y Pip Value</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-neutral-100 rounded-lg">
+              <h4 class="font-bold text-neutral-800 mb-3">📋 Ejemplo: XAUUSD en diferentes brokers</h4>
+              <table class="w-full text-sm">
+                <thead><tr class="bg-neutral-200"><th class="p-2 text-left">Broker</th><th class="p-2">Tamaño Contrato</th><th class="p-2">Valor Tick</th></tr></thead>
+                <tbody class="divide-y divide-neutral-200">
+                  <tr class="bg-white"><td class="p-2 font-medium">Exness, IC Markets, XM</td><td class="p-2 mono text-center">100 oz</td><td class="p-2 mono text-center">$1.00</td></tr>
+                  <tr class="bg-amber-50"><td class="p-2 font-medium">Algunos otros brokers</td><td class="p-2 mono text-center text-amber-700 font-bold">1 oz</td><td class="p-2 mono text-center text-amber-700 font-bold">$0.01</td></tr>
+                </tbody>
+              </table>
+              <p class="text-xs text-neutral-500 mt-2">⚠️ Siempre verifica en TU broker antes de operar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla referencia -->
+      <div class="mt-6 bg-white rounded-xl shadow-sm border p-6">
+        <h3 class="text-lg font-bold text-brand mb-4">📋 ¿Necesito ajustar especificaciones?</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr class="bg-brand/5"><th class="text-left p-3 font-semibold">Tipo</th><th class="p-3 font-semibold">¿Universal?</th><th class="text-left p-3 font-semibold">¿Qué hacer?</th></tr></thead>
+            <tbody class="divide-y divide-neutral-100">
+              <tr><td class="p-3"><span class="category-badge cat-forex">Forex</span></td><td class="p-3 text-center"><span class="accuracy-badge accuracy-high">✓ SÍ</span></td><td class="p-3 text-green-700">Usa directamente. 1 lote = 100,000 unidades siempre.</td></tr>
+              <tr><td class="p-3"><span class="category-badge cat-metals">Metales</span></td><td class="p-3 text-center"><span class="accuracy-badge accuracy-low">⚠️ NO</span></td><td class="p-3 text-amber-700">Verifica. Oro típico = 100 oz, pero puede ser 1 oz.</td></tr>
+              <tr><td class="p-3"><span class="category-badge cat-energy">Energías</span></td><td class="p-3 text-center"><span class="accuracy-badge accuracy-low">⚠️ NO</span></td><td class="p-3 text-red-700">SIEMPRE verifica. Varía mucho entre brokers.</td></tr>
+              <tr><td class="p-3"><span class="category-badge cat-indices">Índices</span></td><td class="p-3 text-center"><span class="accuracy-badge accuracy-low">⚠️ NO</span></td><td class="p-3 text-red-700">SIEMPRE verifica. El valor por punto varía enormemente.</td></tr>
+              <tr><td class="p-3"><span class="category-badge cat-crypto">Cripto</span></td><td class="p-3 text-center"><span class="accuracy-badge accuracy-low">⚠️ NO</span></td><td class="p-3 text-red-700">SIEMPRE verifica. 1 lote puede ser 1 BTC, 0.1 o 0.01 BTC.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="text-center text-xs text-neutral-500 mt-8">© 2025 DF ACADEMY · Herramienta educativa. No constituye asesoría financiera.</p>
+    </section>
+  </main>
+
+  <script>
+    const INSTRUMENTS = {
+      _fx: { type:'forex', lotSize:100000, pipSize:0.0001, unitLabel:'unidades', universal:true },
+      _fxJPY: { type:'forex', lotSize:100000, pipSize:0.01, unitLabel:'unidades', universal:true },
+      XAUUSD: { type:'metal', quote:'USD', pipSize:0.01, lotSize:100, unitLabel:'onzas', universal:false, defLotSize:100, defTickVal:1, note:'Oro: Típico 1 lote = 100 oz. VERIFICA en tu broker.' },
+      XAGUSD: { type:'metal', quote:'USD', pipSize:0.01, lotSize:5000, unitLabel:'onzas', universal:false, defLotSize:5000, defTickVal:50, note:'Plata: Típico 1 lote = 5,000 oz. VERIFICA.' },
+      XPTUSD: { type:'metal', quote:'USD', pipSize:0.01, lotSize:100, unitLabel:'onzas', universal:false, defLotSize:100, defTickVal:1, note:'Platino: VERIFICA especificaciones.' },
+      XPDUSD: { type:'metal', quote:'USD', pipSize:0.01, lotSize:100, unitLabel:'onzas', universal:false, defLotSize:100, defTickVal:1, note:'Paladio: VERIFICA especificaciones.' },
+      USOIL: { type:'energy', quote:'USD', pipSize:0.01, lotSize:100, unitLabel:'barriles', universal:false, defLotSize:100, defTickVal:1, note:'WTI: Varía MUCHO (100, 1000, o 10 barriles). VERIFICA.' },
+      UKOIL: { type:'energy', quote:'USD', pipSize:0.01, lotSize:100, unitLabel:'barriles', universal:false, defLotSize:100, defTickVal:1, note:'Brent: Varía entre brokers. VERIFICA.' },
+      NGAS: { type:'energy', quote:'USD', pipSize:0.001, lotSize:10000, unitLabel:'MMBtu', universal:false, defLotSize:10000, defTickVal:10, note:'Gas Natural: VERIFICA especificaciones.' },
+      US30: { type:'index', quote:'USD', pipSize:1.0, lotSize:1, unitLabel:'contratos', universal:false, defLotSize:1, defTickVal:1, note:'Dow Jones: Valor por punto varía ($1-$10). VERIFICA.' },
+      US500: { type:'index', quote:'USD', pipSize:0.1, lotSize:1, unitLabel:'contratos', universal:false, defLotSize:1, defTickVal:0.1, note:'S&P 500: Valor por tick varía. VERIFICA.' },
+      US100: { type:'index', quote:'USD', pipSize:0.1, lotSize:1, unitLabel:'contratos', universal:false, defLotSize:1, defTickVal:0.1, note:'NASDAQ: Valor por tick varía. VERIFICA.' },
+      GER40: { type:'index', quote:'EUR', pipSize:0.1, lotSize:1, unitLabel:'contratos', universal:false, defLotSize:1, defTickVal:0.1, note:'DAX: Cotizado en EUR. VERIFICA y ajusta TC.' },
+      UK100: { type:'index', quote:'GBP', pipSize:0.1, lotSize:1, unitLabel:'contratos', universal:false, defLotSize:1, defTickVal:0.1, note:'FTSE: Cotizado en GBP. VERIFICA.' },
+      JPN225: { type:'index', quote:'JPY', pipSize:1.0, lotSize:1, unitLabel:'contratos', universal:false, defLotSize:1, defTickVal:1, note:'Nikkei: Cotizado en JPY. VERIFICA.' },
+      FRA40: { type:'index', quote:'EUR', pipSize:0.1, lotSize:1, unitLabel:'contratos', universal:false, defLotSize:1, defTickVal:0.1, note:'CAC 40: VERIFICA.' },
+      ESP35: { type:'index', quote:'EUR', pipSize:0.1, lotSize:1, unitLabel:'contratos', universal:false, defLotSize:1, defTickVal:0.1, note:'IBEX 35: VERIFICA.' },
+      BTCUSD: { type:'crypto', quote:'USD', pipSize:1.0, lotSize:1, unitLabel:'BTC', universal:false, defLotSize:1, defTickVal:1, note:'Bitcoin: 1 lote puede ser 1, 0.1, o 0.01 BTC. VERIFICA.' },
+      ETHUSD: { type:'crypto', quote:'USD', pipSize:0.1, lotSize:1, unitLabel:'ETH', universal:false, defLotSize:1, defTickVal:0.1, note:'Ethereum: Tamaño varía. VERIFICA.' },
+      LTCUSD: { type:'crypto', quote:'USD', pipSize:0.01, lotSize:1, unitLabel:'LTC', universal:false, defLotSize:1, defTickVal:0.01, note:'Litecoin: VERIFICA.' },
+      XRPUSD: { type:'crypto', quote:'USD', pipSize:0.0001, lotSize:1000, unitLabel:'XRP', universal:false, defLotSize:1000, defTickVal:0.1, note:'Ripple: VERIFICA.' },
+      SOLUSD: { type:'crypto', quote:'USD', pipSize:0.01, lotSize:10, unitLabel:'SOL', universal:false, defLotSize:10, defTickVal:0.1, note:'Solana: VERIFICA.' },
+      ADAUSD: { type:'crypto', quote:'USD', pipSize:0.0001, lotSize:1000, unitLabel:'ADA', universal:false, defLotSize:1000, defTickVal:0.1, note:'Cardano: VERIFICA.' },
+      DOGEUSD: { type:'crypto', quote:'USD', pipSize:0.00001, lotSize:10000, unitLabel:'DOGE', universal:false, defLotSize:10000, defTickVal:0.1, note:'Dogecoin: VERIFICA.' },
+      LINKUSD: { type:'crypto', quote:'USD', pipSize:0.001, lotSize:100, unitLabel:'LINK', universal:false, defLotSize:100, defTickVal:0.1, note:'Chainlink: VERIFICA.' }
+    };
+
+    const FX_PAIRS = {
+      EURUSD:{base:'EUR',quote:'USD'},GBPUSD:{base:'GBP',quote:'USD'},USDJPY:{base:'USD',quote:'JPY'},USDCHF:{base:'USD',quote:'CHF'},
+      AUDUSD:{base:'AUD',quote:'USD'},USDCAD:{base:'USD',quote:'CAD'},NZDUSD:{base:'NZD',quote:'USD'},
+      EURGBP:{base:'EUR',quote:'GBP'},EURJPY:{base:'EUR',quote:'JPY'},EURCHF:{base:'EUR',quote:'CHF'},EURAUD:{base:'EUR',quote:'AUD'},
+      EURCAD:{base:'EUR',quote:'CAD'},EURNZD:{base:'EUR',quote:'NZD'},GBPJPY:{base:'GBP',quote:'JPY'},GBPCHF:{base:'GBP',quote:'CHF'},
+      GBPAUD:{base:'GBP',quote:'AUD'},GBPCAD:{base:'GBP',quote:'CAD'},GBPNZD:{base:'GBP',quote:'NZD'},AUDJPY:{base:'AUD',quote:'JPY'},
+      AUDCHF:{base:'AUD',quote:'CHF'},AUDCAD:{base:'AUD',quote:'CAD'},AUDNZD:{base:'AUD',quote:'NZD'},CADJPY:{base:'CAD',quote:'JPY'},
+      CADCHF:{base:'CAD',quote:'CHF'},CHFJPY:{base:'CHF',quote:'JPY'},NZDJPY:{base:'NZD',quote:'JPY'},NZDCHF:{base:'NZD',quote:'CHF'},
+      NZDCAD:{base:'NZD',quote:'CAD'},USDMXN:{base:'USD',quote:'MXN'},USDZAR:{base:'USD',quote:'ZAR'},USDTRY:{base:'USD',quote:'TRY'},
+      USDSEK:{base:'USD',quote:'SEK'},USDNOK:{base:'USD',quote:'NOK'},USDDKK:{base:'USD',quote:'DKK'},USDSGD:{base:'USD',quote:'SGD'},
+      USDHKD:{base:'USD',quote:'HKD'},USDPLN:{base:'USD',quote:'PLN'},USDHUF:{base:'USD',quote:'HUF'},USDCZK:{base:'USD',quote:'CZK'},
+      USDCNH:{base:'USD',quote:'CNH'},EURTRY:{base:'EUR',quote:'TRY'},EURMXN:{base:'EUR',quote:'MXN'},EURZAR:{base:'EUR',quote:'ZAR'},
+      EURSEK:{base:'EUR',quote:'SEK'},EURNOK:{base:'EUR',quote:'NOK'},EURPLN:{base:'EUR',quote:'PLN'},GBPZAR:{base:'GBP',quote:'ZAR'},
+      GBPTRY:{base:'GBP',quote:'TRY'}
+    };
+
+    let customBroker = { enabled: false, lotSize: 100, tickValue: 1 };
+
+    function resolveInstrument(symbol) {
+      if (FX_PAIRS[symbol]) {
+        const fx = FX_PAIRS[symbol];
+        const isJPY = fx.quote === 'JPY' || fx.quote === 'HUF';
+        const tpl = isJPY ? INSTRUMENTS._fxJPY : INSTRUMENTS._fx;
+        return { ...tpl, base: fx.base, quote: fx.quote, symbol };
+      }
+      if (INSTRUMENTS[symbol]) return { ...INSTRUMENTS[symbol], symbol };
+      const base = symbol.slice(0,3), quote = symbol.slice(3,6);
+      const isJPY = quote === 'JPY';
+      return { ...(isJPY ? INSTRUMENTS._fxJPY : INSTRUMENTS._fx), base, quote, symbol };
+    }
+
+    function isUniversal(symbol) { return FX_PAIRS[symbol] || INSTRUMENTS[symbol]?.universal === true; }
+
+    function updateAccuracy(symbol) {
+      const badge = document.getElementById('accuracyBadge');
+      const text = document.getElementById('accuracyText');
+      if (isUniversal(symbol)) {
+        badge.className = 'accuracy-badge accuracy-high'; badge.textContent = '✓ Precisión Universal';
+        text.textContent = 'Estándar en todos los brokers';
+      } else {
+        badge.className = 'accuracy-badge accuracy-low'; badge.textContent = '⚠️ Verificar Broker';
+        text.textContent = 'Ajusta las especificaciones abajo';
+      }
+    }
+
+    function updateBrokerFields(symbol) {
+      const instr = resolveInstrument(symbol);
+      if (!isUniversal(symbol)) {
+        document.getElementById('brokerLotSize').value = instr.defLotSize || instr.lotSize || 100;
+        document.getElementById('brokerTickValue').value = instr.defTickVal || 1;
+      }
+    }
+
+    function fmt(n, d=2) { return isFinite(n) ? Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}) : '—'; }
+
+    function recalc() {
+      const symbol = document.getElementById('symbol').value;
+      const accountCcy = document.getElementById('accountCcy').value.toUpperCase();
+      const balance = Number(document.getElementById('balance').value);
+      const riskPct = Number(document.getElementById('riskPct').value);
+      const stopPips = Number(document.getElementById('stopPips').value);
+      const convInput = Number(document.getElementById('conv').value);
+
+      let instr = resolveInstrument(symbol);
+      const quote = instr.quote || symbol.slice(3,6);
+      const universal = isUniversal(symbol);
+
+      let lotSize, pipValuePerLot;
+      if (universal) {
+        lotSize = instr.lotSize;
+        pipValuePerLot = instr.pipSize * lotSize; // Para forex: 0.0001 * 100000 = 10 USD por pip por lote
+      } else if (customBroker.enabled) {
+        lotSize = customBroker.lotSize;
+        pipValuePerLot = customBroker.tickValue;
+      } else {
+        lotSize = instr.defLotSize || instr.lotSize || 100;
+        pipValuePerLot = instr.defTickVal || 1;
+      }
+
+      const conv = (accountCcy === quote.toUpperCase()) ? 1 : (convInput || 1);
+      const riskMoney = balance * (riskPct / 100);
+      const pipValueInAccount = pipValuePerLot * conv;
+      const lots = riskMoney / (stopPips * pipValueInAccount);
+      const units = lots * lotSize;
+
+      document.getElementById('unitLabel').textContent = instr.unitLabel || 'Unidades';
+      document.getElementById('lotsLabel').textContent = '1 lote = ' + lotSize.toLocaleString() + ' ' + (instr.unitLabel || 'unidades');
+      document.getElementById('riskMoneyOut').textContent = fmt(riskMoney,2) + ' ' + accountCcy;
+      document.getElementById('pipValueOut').textContent = fmt(pipValueInAccount,2) + ' ' + accountCcy + '/pip/lote';
+      document.getElementById('unitsOut').textContent = fmt(units, universal ? 0 : 2);
+      document.getElementById('lotsOut').textContent = fmt(lots, 2);
+      document.getElementById('miniOut').textContent = fmt(lots * 10, 2);
+      document.getElementById('microOut').textContent = fmt(lots * 100, 1);
+
+      const infoEl = document.getElementById('instrumentInfo');
+      infoEl.innerHTML = instr.note ? '<b>ℹ️</b> ' + instr.note : (universal ? '<b>✓</b> ' + symbol + ' es Forex estándar. 1 lote = 100,000 ' + (instr.base||symbol.slice(0,3)) + '.' : '');
+      infoEl.style.display = instr.note || universal ? 'block' : 'none';
+
+      updateCalcNotes(symbol, universal, lotSize, pipValueInAccount, accountCcy, quote, conv);
+      updateAccuracy(symbol);
+    }
+
+    function updateCalcNotes(symbol, universal, lotSize, pipVal, accountCcy, quote, conv) {
+      const el = document.getElementById('calcNotes');
+      let notes = [];
+      if (universal) {
+        notes = [
+          '<span class="text-green-600 font-medium">✓ FOREX es estándar universal</span> - Usa estos valores directamente.',
+          '1 lote = 100,000 unidades. 1 pip ≈ $10 USD por lote (para pares USD).',
+          conv !== 1 ? '<span class="text-amber-600">⚠️ TC aplicado: ' + conv + '</span>' : '✓ Cuenta coincide con cotizada.'
+        ];
+      } else {
+        notes = [
+          '<span class="text-amber-600 font-medium">⚠️ Este activo NO es estándar</span> - Especificaciones varían por broker.',
+          customBroker.enabled ? '<span class="text-green-600">✓ Usando tus especificaciones: Lote=' + customBroker.lotSize + ', TickVal=$' + customBroker.tickValue + '</span>' : '<span class="text-red-600">⚡ Usando valores por defecto. Ajusta en "Especificaciones del Broker".</span>',
+          'Valor actual: 1 lote = ' + lotSize.toLocaleString() + ' unidades, $' + fmt(pipVal,2) + '/pip/lote'
+        ];
+      }
+      el.innerHTML = notes.filter(n=>n).map(n => '<li>' + n + '</li>').join('');
+    }
+
+    function resetForm() {
+      document.getElementById('symbol').value = 'EURUSD';
+      document.getElementById('accountCcy').value = 'USD';
+      document.getElementById('balance').value = 10000;
+      document.getElementById('riskPct').value = 1;
+      document.getElementById('stopPips').value = 20;
+      document.getElementById('conv').value = 1;
+      customBroker.enabled = false;
+      recalc();
+    }
+
+    function applyBrokerSpecs() {
+      customBroker.enabled = true;
+      customBroker.lotSize = Number(document.getElementById('brokerLotSize').value) || 100;
+      customBroker.tickValue = Number(document.getElementById('brokerTickValue').value) || 1;
+      recalc();
+      const btn = document.getElementById('btnApplyBroker');
+      btn.textContent = '✓ ¡Aplicado!'; btn.classList.replace('bg-amber-500','bg-green-500');
+      setTimeout(() => { btn.textContent = '✓ Aplicar Especificaciones'; btn.classList.replace('bg-green-500','bg-amber-500'); }, 2000);
+    }
+
+    document.getElementById('symbol').addEventListener('change', () => { customBroker.enabled = false; updateBrokerFields(document.getElementById('symbol').value); recalc(); });
+    ['accountCcy','balance','riskPct','stopPips','conv'].forEach(id => document.getElementById(id).addEventListener('input', recalc));
+    document.getElementById('btnCalc').addEventListener('click', recalc);
+    document.getElementById('btnReset').addEventListener('click', resetForm);
+    document.getElementById('btnApplyBroker').addEventListener('click', applyBrokerSpecs);
+
+    function setupCollapsible(toggleId, contentId, arrowId) {
+      document.getElementById(toggleId).addEventListener('click', () => {
+        const content = document.getElementById(contentId);
+        const arrow = document.getElementById(arrowId);
+        content.classList.toggle('open');
+        arrow.style.transform = content.classList.contains('open') ? 'rotate(180deg)' : '';
+      });
+    }
+    setupCollapsible('brokerToggle','brokerContent','brokerArrow');
+    setupCollapsible('guideToggle','guideContent','guideArrow');
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.classList.add('bg-neutral-100'); });
+        btn.classList.add('active'); btn.classList.remove('bg-neutral-100');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+      });
+    });
+
+    recalc();
+  </script>
+  <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(()=>{});</script>
+</body>
+</html>
